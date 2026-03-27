@@ -1,98 +1,210 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# One Million Copy - Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST para gestión de leads con integración de IA.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack Tecnológico
 
-## Description
+| Tecnología              | Porqué                                                                     |
+| ----------------------- | -------------------------------------------------------------------------- |
+| **NestJS**              | Arquitectura limpia, inyección de dependencias, modularidad out-of-the-box |
+| **Prisma + PostgreSQL** | Tipado fuerte, migraciones automáticas, queries type-safe                  |
+| **TypeScript**          | Seguridad en tipos, mejor DX                                               |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Decisiones Técnicas
 
-## Project setup
+- **Soft delete**: Se usa `deleted_at` en lugar de boolean para mantener integridad de datos
+- **AI desacoplado**: Provider pattern permite cambiar entre Mock y OpenAI sin modificar lógica de negocio
+- **Sin autenticación**: No es requerida por la especificación y suma complejidad innecesaria bajo restricción de tiempo
+
+## Setup
+
+### Requisitos
+
+- Node.js 18+
+- PostgreSQL 14+
+
+### Instalación
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+### Variables de entorno
+
+Copiar `.env.example` a `.env` y configurar:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/one_million_copy?schema=public"
+PORT=3000
+
+# AI (opcional)
+AI_PROVIDER=mock
+OPENAI_API_KEY=sk-...
+```
+
+### Migraciones y Seed
 
 ```bash
-# development
-$ npm run start
+# Generar cliente Prisma
+npx prisma generate
 
-# watch mode
-$ npm run start:dev
+# Ejecutar migraciones
+npx prisma migrate dev
 
-# production mode
-$ npm run start:prod
+# Poblar con datos de ejemplo (12 leads)
+npm run prisma:seed
 ```
 
-## Run tests
+## Endpoints
+
+### POST /leads
+
+Crear un nuevo lead.
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+curl -X POST http://localhost:3000/leads \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Juan Pérez",
+    "email": "juan@test.com",
+    "telefono": "+5491155550001",
+    "fuente": "instagram",
+    "producto_interes": "Curso de Marketing",
+    "presupuesto": 199.99
+  }'
 ```
 
-## Deployment
+### GET /leads
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Listar leads con paginación y filtros.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Todos los leads
+curl http://localhost:3000/leads
+
+# Con paginación
+curl "http://localhost:3000/leads?page=1&limit=10"
+
+# Filtrar por fuente
+curl "http://localhost:3000/leads?fuente=instagram"
+
+# Filtrar por rango de fecha
+curl "http://localhost:3000/leads?startDate=2024-01-01&endDate=2024-12-31"
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### GET /leads/:id
 
-## Resources
+Obtener un lead por ID.
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+curl http://localhost:3000/leads/{id}
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### PATCH /leads/:id
 
-## Support
+Actualizar un lead.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+curl -X PATCH http://localhost:3000/leads/{id} \
+  -H "Content-Type: application/json" \
+  -d '{"presupuesto": 299.99}'
+```
 
-## Stay in touch
+### DELETE /leads/:id
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Eliminar un lead (soft delete).
+
+```bash
+curl -X DELETE http://localhost:3000/leads/{id}
+```
+
+### GET /leads/stats
+
+Estadísticas de leads.
+
+```bash
+curl http://localhost:3000/leads/stats
+```
+
+Respuesta:
+
+```json
+{
+  "total": 12,
+  "byFuente": [
+    { "fuente": "instagram", "count": 4 },
+    { "fuente": "facebook", "count": 3 },
+    ...
+  ],
+  "avgPresupuesto": 217.75,
+  "last7Days": 12
+}
+```
+
+### POST /leads/ai/summary
+
+Generar resumen con IA (mock o OpenAI).
+
+```bash
+# Resumen de todos los leads
+curl -X POST http://localhost:3000/leads/ai/summary
+
+# Con filtros
+curl -X POST http://localhost:3000/leads/ai/summary \
+  -H "Content-Type: application/json" \
+  -d '{"fuente": "instagram"}'
+```
+
+## AI Integration
+
+### Configuración
+
+Por defecto usa el **Mock Provider**. Para usar OpenAI:
+
+1. Obtener API key de OpenAI
+2. Configurar en `.env`:
+   ```
+   AI_PROVIDER=openai
+   OPENAI_API_KEY=sk-...
+   ```
+
+### Arquitectura
+
+```
+src/modules/ai/
+├── ai.module.ts
+├── ai.service.ts
+├── ai.controller.ts
+└── providers/
+    ├── ai-provider.interface.ts
+    ├── mock.provider.ts
+    └── openai.provider.ts
+```
+
+El patrón **Provider** permite:
+
+- Cambiar de mock a OpenAI sin modificar código de negocio
+- Agregar nuevos proveedores (Anthropic, Google, etc.) fácilmente
+- Testing simple con mocks
+
+## Ejecutar en Desarrollo
+
+```bash
+npm run start:dev
+```
+
+El servidor estará disponible en `http://localhost:3000`
+
+## Tests
+
+```bash
+# Unit tests
+npm run test
+
+# Coverage
+npm run test:cov
+```
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+MIT

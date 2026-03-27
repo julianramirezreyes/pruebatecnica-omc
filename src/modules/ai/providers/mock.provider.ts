@@ -17,17 +17,20 @@ export class MockAiProvider implements IAiProvider {
       };
     }
 
-    const fuenteCounts = leads.reduce(
-      (acc, lead) => {
-        acc[lead.fuente] = (acc[lead.fuente] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    const fuenteCounts: Record<string, number> = {};
+    for (const lead of leads) {
+      const key = String(lead.fuente);
+      fuenteCounts[key] = (fuenteCounts[key] || 0) + 1;
+    }
 
-    const mainSource = Object.entries(fuenteCounts).sort(
-      (a, b) => b[1] - a[1],
-    )[0];
+    let mainSourceKey = 'unknown';
+    let mainSourceCount = 0;
+    for (const [key, count] of Object.entries(fuenteCounts)) {
+      if (count > mainSourceCount) {
+        mainSourceKey = key;
+        mainSourceCount = count;
+      }
+    }
 
     const totalPresupuesto = leads.reduce(
       (sum, l) => sum + (Number(l.presupuesto) || 0),
@@ -35,28 +38,30 @@ export class MockAiProvider implements IAiProvider {
     );
     const avgPresupuesto = totalPresupuesto / leads.length;
 
-    const productosInteres = leads
-      .filter((l) => l.producto_interes)
-      .reduce(
-        (acc, l) => {
-          if (l.producto_interes) {
-            acc[l.producto_interes] = (acc[l.producto_interes] || 0) + 1;
-          }
-          return acc;
-        },
-        {} as Record<string, number>,
-      );
+    const productosInteres: Record<string, number> = {};
+    for (const lead of leads) {
+      if (lead.producto_interes) {
+        productosInteres[lead.producto_interes] =
+          (productosInteres[lead.producto_interes] || 0) + 1;
+      }
+    }
 
-    const topProducto = Object.entries(productosInteres).sort(
-      (a, b) => b[1] - a[1],
-    )[0];
+    let topProductoKey = '';
+    let topProductoCount = 0;
+    for (const [key, count] of Object.entries(productosInteres)) {
+      if (count > topProductoCount) {
+        topProductoKey = key;
+        topProductoCount = count;
+      }
+    }
 
-    const summary = `Análisis de ${leads.length} leads: La fuente principal es ${mainSource[0]} con ${mainSource[1]} leads (${((mainSource[1] / leads.length) * 100).toFixed(1)}%). El presupuesto promedio es de $${avgPresupuesto.toFixed(2)}. ${topProducto ? `El producto más solicitado es "${topProducto[0]}" con ${topProducto[1]} interesse(s).` : ''}`;
+    const percentage = ((mainSourceCount / leads.length) * 100).toFixed(1);
+    const summary = `Análisis de ${leads.length} leads: La fuente principal es ${mainSourceKey} con ${mainSourceCount} leads (${percentage}%). El presupuesto promedio es de $${avgPresupuesto.toFixed(2)}. ${topProductoKey ? `El producto más solicitado es "${topProductoKey}" con ${topProductoCount} interesse(s).` : ''}`;
 
     const recommendations: string[] = [];
-    if (mainSource[1] / leads.length > 0.5) {
+    if (mainSourceCount / leads.length > 0.5) {
       recommendations.push(
-        `Considera diversificar tus fuentes de leads. El ${mainSource[0]} representa más del 50%.`,
+        `Considera diversificar tus fuentes de leads. El ${mainSourceKey} representa más del 50%.`,
       );
     }
     if (avgPresupuesto < 100) {
@@ -68,7 +73,7 @@ export class MockAiProvider implements IAiProvider {
 
     return {
       summary,
-      mainSource: mainSource[0],
+      mainSource: mainSourceKey,
       recommendations,
     };
   }
