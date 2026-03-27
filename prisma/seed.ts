@@ -1,6 +1,8 @@
 import { PrismaClient, Fuente } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+});
 
 const leads = [
   {
