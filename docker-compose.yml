@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: one-million-copy-db
+    environment:
+      POSTGRES_USER: julian
+      POSTGRES_PASSWORD: julian123
+      POSTGRES_DB: one_million_copy
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U julian']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: one-million-copy-app
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://julian:julian123@postgres:5432/one_million_copy?schema=public
+      PORT: 3000
+      AI_PROVIDER: mock
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
