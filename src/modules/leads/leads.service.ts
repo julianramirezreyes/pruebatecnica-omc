@@ -2,14 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { LeadsRepository } from './leads.repository';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { QueryLeadsDto } from './dto/query-leads.dto';
-import { Lead } from '@prisma/client';
-import { P2002 } from '@prisma/client/runtime/library';
+import { Lead, Prisma } from '@prisma/client';
 
 @Injectable()
 export class LeadsService {
@@ -19,7 +17,10 @@ export class LeadsService {
     try {
       return await this.leadsRepository.create(dto);
     } catch (error) {
-      if (error instanceof P2002) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException('Email already exists');
       }
       throw error;
@@ -43,7 +44,10 @@ export class LeadsService {
     try {
       return await this.leadsRepository.update(id, dto);
     } catch (error) {
-      if (error instanceof P2002) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException('Email already exists');
       }
       throw error;
