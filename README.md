@@ -2,6 +2,9 @@
 
 API REST para gestión de leads con integración de IA.
 
+<img width="746" height="365" alt="image" src="https://github.com/user-attachments/assets/d814c77b-8215-459f-8164-56b1a62a33ef" />
+
+
 ## Stack Tecnológico
 
 | Tecnología | Porqué |
