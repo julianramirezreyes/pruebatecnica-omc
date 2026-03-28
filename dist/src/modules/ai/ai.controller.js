@@ -15,11 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiController = void 0;
 const common_1 = require("@nestjs/common");
 const ai_service_1 = require("./ai.service");
-class GenerateSummaryDto {
-    fuente;
-    startDate;
-    endDate;
-}
 let AiController = class AiController {
     aiService;
     constructor(aiService) {
@@ -37,7 +32,7 @@ __decorate([
     (0, common_1.Post)('summary'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [GenerateSummaryDto]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AiController.prototype, "generateSummary", null);
 __decorate([
