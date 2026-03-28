@@ -112,16 +112,16 @@ npm run prisma:seed
 Crear un nuevo lead.
 ```
 
-curl -X POST http://localhost:3000/leads   
-\-H "Content-Type: application/json"   
-\-d '{  
-"nombre": "Juan Pérez",  
-"email": "juan@test.com",  
-"telefono": "+5491155550001",  
-"fuente": "instagram",  
-"producto\_interes": "Curso de Marketing",  
-"presupuesto": 199.99  
-}'
+curl -X POST http://localhost:3000/leads \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Juan Pérez",
+    "email": "juan@test.com",
+    "telefono": "+5491155550001",
+    "fuente": "instagram",
+    "producto_interes": "Curso de Marketing",
+    "presupuesto": 199.99
+  }'
 
 ```
 
